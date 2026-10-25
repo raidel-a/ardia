@@ -564,7 +564,9 @@ horizontal cylinder seen from the front: pitch 36 pt (the arc
   (orthographic). A real rotateY with a 900 pt perspective does not render on the native Symbol and Text
   glyph children, which stayed flat, so the flat projection is what ships. Opacity falls from 1.2 to
   1.45 rad; the band clips the rest. A cell also fades to 0 over the last 40 pt at each band edge
-  (4 pt inset), so a glyph dissolves instead of being cut.
+  (4 pt inset), so a glyph dissolves instead of being cut. With the downloads button in the footer's
+  left corner, the band clears its 34 pt box (6 pt inset, 6 pt gap) over 18 pt more, so no profile
+  glyph sits against the control; the dial itself stays centred on the sidebar.
 - There are no tick marks and no groove; only the glyph faces fill the band.
 - One face per profile: a 24 pt glyph box (12 pt base glyph). The glyph is magnified by a tight Dock-like bell
   curve driven by the same position value: 1.8x at the centre (about 22 pt), 1.08x one slot out

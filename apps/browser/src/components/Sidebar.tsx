@@ -153,6 +153,7 @@ export function Sidebar({ width }: { width: number }) {
                   width={width}
                   leftRoom={12}
                   rightRoom={12}
+                  clearLeft={footerDownloads ? SIDEBAR_FOOTER_DOWNLOADS.size + layout.sidebarInset + 6 : 0}
                 />
               ) : null}
               {footerDownloads ? (

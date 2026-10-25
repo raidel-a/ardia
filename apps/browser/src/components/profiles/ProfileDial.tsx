@@ -49,6 +49,7 @@ const GLYPH_IDLE = 0.55;
 const LIFT_SCALE = 1.18;
 const EDGE_FADE = 40;
 const EDGE_INSET = 4;
+const CLEAR_FADE = 18;
 const SETTLE_DELAY = 700;
 
 const springTo = (value: Animated.Value, to: number) =>
@@ -60,7 +61,19 @@ export function useProfileSwitcherShown() {
   return !incognito && count > 1;
 }
 
-export function ProfileDial({ windowId, width, leftRoom, rightRoom }: { windowId: string; width: number; leftRoom: number; rightRoom: number }) {
+export function ProfileDial({
+  windowId,
+  width,
+  leftRoom,
+  rightRoom,
+  clearLeft = 0,
+}: {
+  windowId: string;
+  width: number;
+  leftRoom: number;
+  rightRoom: number;
+  clearLeft?: number;
+}) {
   const ids = useBrowser(useShallow((s) => s.profileOrder));
   const current = useBrowser((s) => s.windows[windowId]?.profileId ?? "");
   const icons = useBrowser(useShallow((s) => s.profileOrder.map((id) => s.profiles[id]?.icon ?? null)));
@@ -69,7 +82,7 @@ export function ProfileDial({ windowId, width, leftRoom, rightRoom }: { windowId
   const index = Math.max(0, ids.indexOf(current));
   const room = width - leftRoom - rightRoom;
   if (room < DIAL_MIN_ROOM) return <CompactDots windowId={windowId} ids={ids} names={names} />;
-  return <Tuner windowId={windowId} ids={ids} icons={icons} names={names} accents={accents} index={index} leftRoom={leftRoom} room={room} />;
+  return <Tuner windowId={windowId} ids={ids} icons={icons} names={names} accents={accents} index={index} leftRoom={leftRoom} room={room} clearLeft={clearLeft} />;
 }
 
 function Tuner({
@@ -81,6 +94,7 @@ function Tuner({
   index,
   leftRoom,
   room,
+  clearLeft,
 }: {
   windowId: string;
   ids: string[];
@@ -90,6 +104,7 @@ function Tuner({
   index: number;
   leftRoom: number;
   room: number;
+  clearLeft: number;
 }) {
   const theme = useTheme();
   const band = useRef<View>(null);
@@ -354,6 +369,8 @@ function Tuner({
             lifted={lifted === id}
             position={position}
             room={room}
+            leftRoom={leftRoom}
+            clearLeft={clearLeft}
             offset={offsetOf(id)}
             onPress={() => press(id, i)}
             onPressOut={release}
@@ -404,6 +421,8 @@ function Slot({
   lifted,
   position,
   room,
+  leftRoom,
+  clearLeft,
   offset,
   onPress,
   onPressOut,
@@ -421,6 +440,8 @@ function Slot({
   lifted: boolean;
   position: Animated.Value;
   room: number;
+  leftRoom: number;
+  clearLeft: number;
   offset: Animated.Value;
   onPress(): void;
   onPressOut(): void;
@@ -444,9 +465,23 @@ function Slot({
       }),
     [samples, slot, room],
   );
+  const clear = useMemo(
+    () =>
+      samples.input.map((rest) => {
+        if (!clearLeft) return 1;
+        const x = leftRoom + room / 2 + cylinderPoint(slot, rest).x;
+        return Math.max(0, Math.min(1, (x - clearLeft) / CLEAR_FADE));
+      }),
+    [samples, slot, room, leftRoom, clearLeft],
+  );
   const opacity = useMemo(
-    () => position.interpolate({ inputRange: samples.input, outputRange: samples.input.map((_, i) => (samples.opacity[i] ?? 0) * (edge[i] ?? 0)), extrapolate: "clamp" }),
-    [position, samples, edge],
+    () =>
+      position.interpolate({
+        inputRange: samples.input,
+        outputRange: samples.input.map((_, i) => (samples.opacity[i] ?? 0) * (edge[i] ?? 0) * (clear[i] ?? 1)),
+        extrapolate: "clamp",
+      }),
+    [position, samples, edge, clear],
   );
   const magnify = useMemo(
     () =>
